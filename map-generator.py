@@ -8,13 +8,14 @@ ROOM_VERTICAL = 80
 ROCK_CHAR = '#'
 NONE_CHAR = ' '
 
-DOOR_FRAMES = [4]
+DOOR_FRAMES = [38, 39, 40, 41]
 
 
 def get_interior_sides(room_horizontal: int, room_vertical: int, horizontal: int = MAP_HORIZONTAL,
                        vertical: int = MAP_VERTICAL) -> dict[str:bool]:
     """
     Get the interior corners of the room in terms of the map
+
     :param room_horizontal: The horizontal position of the room in the map
     :param room_vertical: The vertical position of the room in the map
     :param horizontal: The number of rows of rooms on the map
@@ -35,14 +36,19 @@ def get_interior_sides(room_horizontal: int, room_vertical: int, horizontal: int
     return interior_sides
 
 
-def generate_room(door_sides: dict[str:bool], rows: int = ROOM_HORIZONTAL,
-                  columns: int = ROOM_VERTICAL) -> list[list[str]]:
+def generate_room_sides(door_sides: dict[str:bool], frames=None, rows: int = ROOM_HORIZONTAL,
+                        columns: int = ROOM_VERTICAL) -> list[list[str]]:
     """
     Generate a room with the given number of rows and columns.
+
     :param columns: The amount of columns of the room
     :param rows: The amount of rows of the room
     :param door_sides: A dictionary of the sides of the room that are to have a door generated on them
+    :param frames: A list of the frames tiles indices to use for the doors
     """
+    if frames is None:
+        frames = DOOR_FRAMES
+
     room = [[NONE_CHAR for _ in range(columns)] for _ in range(rows)]
 
     # Generate the room's walls
@@ -53,58 +59,77 @@ def generate_room(door_sides: dict[str:bool], rows: int = ROOM_HORIZONTAL,
                 room[row][column] = ROCK_CHAR
 
     # Generate the room's doors
-    # Todo: remove magic numbers
 
     for direction, door in door_sides.items():
         if door:
-            match direction: # noqa: E999
+            match direction:  # noqa: E999
                 case 'north':
-                    room[38][0] = NONE_CHAR
-                    room[39][0] = NONE_CHAR
-                    room[40][0] = NONE_CHAR
-                    room[41][0] = NONE_CHAR
+                    for frame in frames:
+                        room[frame][0] = NONE_CHAR
+
                 case 'east':
-                    room[79][39] = NONE_CHAR
-                    room[79][40] = NONE_CHAR
-                    room[79][41] = NONE_CHAR
-                    room[79][42] = NONE_CHAR
+                    for frame in frames:
+                        room[rows - 1][frame] = NONE_CHAR
+
                 case 'west':
-                    room[0][38] = NONE_CHAR
-                    room[0][39] = NONE_CHAR
-                    room[0][40] = NONE_CHAR
-                    room[0][41] = NONE_CHAR
+                    for frame in frames:
+                        room[0][frame] = NONE_CHAR
+
                 case 'south':
-                    room[39][79] = NONE_CHAR
-                    room[40][79] = NONE_CHAR
-                    room[41][79] = NONE_CHAR
-                    room[42][79] = NONE_CHAR
+                    for frame in frames:
+                        room[frame][columns - 1] = NONE_CHAR
 
-    # Generate the room's interior
-    # Todo: clean up
-
-    g = random.randint(25, 30)
-    while g > 0:
-        rocksize = random.randint(5, 7)
-        rocklocx = random.randint(0, 70)
-        rocklocy = random.randint(0, 70)
-        while rocklocy < 3 and 41 > rocklocx > 32 or rocklocy > 70 and 41 > rocklocx > 32 \
-                or rocklocx > 65 and 41 > rocklocy > 32 or rocklocx > 65 and 41 > rocklocy > 32:
-            rocklocx = random.randint(0, 70)
-            rocklocy = random.randint(0, 70)
-        for v in range(0, rocksize):
-            for t in range(0, random.randint((rocksize - 2), (rocksize + 2))):
-                (room[rocklocy + v])[rocklocx + t] = '#'
-        g -= 1
+                case _:
+                    continue
 
     return room
 
 
-def generate_map(map_width: int = MAP_HORIZONTAL, map_height: int = MAP_VERTICAL) -> list[list[list[list[str]]]]:
+def generate_room_rocks(room: list[list[str]]) -> list[list[str]]:
+    """
+    Generate rocks in the given room. Note that this function may override other structures in the room
+
+    :param room: The room to generate rocks in
+    :return: Room with rocks in it
+    """
+    # Todo: As much as possible cut down on the amount of magic numbers and instead use constants, parameters, etc.
+
+    for _ in range(random.randint(25, 30)):
+        rocksize = random.randint(5, 7)
+        rocklocx = random.randint(0, 70)
+        rocklocy = random.randint(0, 70)
+
+        while rocklocy < 3 and 41 > rocklocx > 32 or rocklocy > 70 and 41 > rocklocx > 32 \
+                or rocklocx > 65 and 41 > rocklocy > 32 or rocklocx > 65 and 41 > rocklocy > 32:
+            rocklocx = random.randint(0, 70)
+            rocklocy = random.randint(0, 70)
+
+        for v in range(0, rocksize):
+            for t in range(0, random.randint((rocksize - 2), (rocksize + 2))):
+                (room[rocklocy + v])[rocklocx + t] = '#'
+
+    return room
+
+
+def generate_map(map_width: int = MAP_HORIZONTAL, map_height: int = MAP_VERTICAL, generate_rocks: bool = True) \
+        -> list[list[list[list[str]]]]:
+    """
+    Generate a rectangular map with the given number of rooms
+
+    :param map_width: Width of the map
+    :param map_height: Height of the map
+    :param generate_rocks: Boolean determining whether rocks should be generated
+    :return: 2d list of rooms, each room is a 2d list of characters
+    """
     new_map = []
     for row in range(map_height):
         new_map.append([])
         for column in range(map_width):
-            new_map[row].append(generate_room(door_sides=get_interior_sides(column, row, map_width, map_height)))
+            room = generate_room_sides(door_sides=get_interior_sides(row, column, map_width, map_height))
+            if generate_rocks:
+                room = generate_room_rocks(room)
+
+            new_map[row].append(room)
 
     return new_map
 
