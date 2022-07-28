@@ -10,7 +10,6 @@
 </head>
 
 <body>
-    <input type="hidden" id="game_map" name="variable" value="{{ variable }}">
     <div>
         <canvas id="map"></canvas>
     </div>
@@ -21,6 +20,7 @@
         <p>Attack - Space</p>
 
     </div>
+    {{ value|json_script:"game_map" }}
     <script src="{% static 'bug_game/map.js' %}"></script>
     <script src="{% static 'bug_game/client.js' %}"></script>
 </body>

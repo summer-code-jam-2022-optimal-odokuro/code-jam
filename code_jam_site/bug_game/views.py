@@ -1,4 +1,7 @@
-from django.shortcuts import render
+import json
+
+from django.shortcuts import HttpResponseRedirect, render
+from django.urls import reverse
 
 from .mapgen import generate_map
 from .models import MapModel
@@ -12,7 +15,7 @@ def home(request):
 
 def ingame(request, game_id=None):
     if game_id is None:
-        game_id = 0
+        return HttpResponseRedirect(reverse(viewname='ingame', kwargs={'game_id': 0}))
         # change this to a random number or read from a database
 
     if MapModel.objects.filter(game_id=game_id).exists():
@@ -20,7 +23,7 @@ def ingame(request, game_id=None):
 
     else:
         game_map = generate_map(game_id)
-        MapModel.objects.create(map=game_map, game_id=game_id)
+        MapModel.objects.create(map=json.dumps(game_map), game_id=game_id)
 
     return render(request, 'bug_game/ingame.html', {'game_map': game_map})
 
