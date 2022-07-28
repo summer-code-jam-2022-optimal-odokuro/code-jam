@@ -6,9 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bug Game</title>
+    {% load static %}
 </head>
 
 <body>
+    <input type="hidden" id="game_map" name="variable" value="{{ variable }}">
     <div>
         <canvas id="map"></canvas>
     </div>
@@ -19,8 +21,8 @@
         <p>Attack - Space</p>
 
     </div>
-    <script src="map.js"></script>
-    <script src="client.js"></script>
+    <script src="{% static 'bug_game/map.js' %}"></script>
+    <script src="{% static 'bug_game/client.js' %}"></script>
 </body>
 
 </html>

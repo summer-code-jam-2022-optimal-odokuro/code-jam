@@ -12,7 +12,8 @@ function getRoom() {
     return exampleMap
 }
 
-room = getRoom();
+const game_room = JSON.parse(document.getElementById("game_map").textContent)[0];
+room = game_room();
 
 function getRoomBuffer(room) {
     const buffer = document.createElement('canvas');
