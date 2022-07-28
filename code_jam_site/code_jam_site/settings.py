@@ -71,6 +71,7 @@ WSGI_APPLICATION = 'code_jam_site.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# TODO: Change to postgresql
 DATABASES = {
 
 }
