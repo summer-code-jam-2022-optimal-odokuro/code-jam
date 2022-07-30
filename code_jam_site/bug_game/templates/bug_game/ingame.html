@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Game</title>
+    {% load static %}
+</head>
+
+<body>
+    <div>
+        <canvas id="map"></canvas>
+    </div>
+
+    <div>
+        <p><b>Controls</b></p>
+        <p>Movement - WASD</p>
+        <p>Attack - Space</p>
+
+    </div>
+    {{ value|json_script:"game_map" }}
+    <script src="{% static 'bug_game/map.js' %}"></script>
+    <script src="{% static 'bug_game/client.js' %}"></script>
+</body>
+
+</html>
