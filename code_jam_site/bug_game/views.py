@@ -17,9 +17,10 @@ def ingame(request, game_id=None):
         return HttpResponseRedirect(reverse(viewname='ingame', kwargs={'game_id': 0}))
         # change this to a random number or read from a database
 
-    game_map = json.dumps(initialize_game(game_id=game_id)[0])
+    initialize_game(game_id=game_id)
+    # not async oof
 
-    return render(request, 'bug_game/ingame.html', {'game_map': game_map, 'game_id': game_id})
+    return render(request, 'bug_game/ingame.html', {'game_id': game_id})
 
 
 def lobby(request):

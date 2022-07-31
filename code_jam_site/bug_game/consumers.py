@@ -1,12 +1,8 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from game_loop import new_player
+from game_loop import GameWrapper, Player, GameWrappers_Global_Dict
 
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
-    map_x: int
-    map_y: int
-    room_x: int
-    room_y: int
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['game_id']
@@ -14,7 +10,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
+        # TODO: get the game wrapper to call new player on
 
+        await GameWrappers_Global_Dict[self.room_name].new_player(self.room_name)
 
         await self.accept()
 
@@ -25,9 +23,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, content, **kwargs):
         # content is a dict representing player input
-        # TODO: get the game wrapper
 
-        await new_player(self.room_name, )
+        await GameWrappers_Global_Dict[self.room_name].player_input_handler(content)
+
+        # TODO: get the game wrapper to call player input on
 
         pass
 

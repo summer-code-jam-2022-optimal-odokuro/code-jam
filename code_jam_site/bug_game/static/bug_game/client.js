@@ -4,8 +4,6 @@ let player = null;
 const GRID = 10;
 // This is the "pixel size" of each tile
 
-const game_map = JSON.parse(document.getElementById('game_map').textContent);
-
 const map = document.getElementById("map");
 map.width = 80 * GRID;
 map.height = 80 * GRID;

@@ -11,6 +11,7 @@ from .models import MapModel
 from .pathfind import pathfind
 
 PLAYER_RANGE = 2
+ENTRANCE_BUFFER = 2
 
 
 @dataclass(init=True)
@@ -29,18 +30,16 @@ class GameEntity:
 
 
 class Player(GameEntity):
-    pass
+    kills: int = 0
 
 
 class Enemy(GameEntity):
     path: list[list[int, int]] = None
 
-    pass
-
 
 @dataclass(init=True)
 class GameWrapper:
-    game_id: int
+    game_id: str
     game_map: list[list[list[list[int]]]]
     player_locations: dict[str, Player]
     enemy_locations: dict[str, Enemy]
@@ -93,10 +92,10 @@ class GameWrapper:
 
         return dist[1]
 
-    async def player_update(self):
+    async def update_clients(self):
         channel_layer = get_channel_layer()
         await channel_layer.group_send(
-            str(self.game_id),
+            self.game_id,
             {
                 "type": "ingame.message",
                 "map": self.game_map,
@@ -149,6 +148,7 @@ class GameWrapper:
                     if v.tile_x() in range(newpos[0] - PLAYER_RANGE, newpos[0] + PLAYER_RANGE) \
                             and v.tile_y() in range(newpos[1] - PLAYER_RANGE, newpos[1] + PLAYER_RANGE):
                         self.enemy_locations.pop(k)
+                        player.kills += 1
 
             case _:
                 no_move = True
@@ -161,8 +161,29 @@ class GameWrapper:
                     # Move player
 
                 case mg.DOOR_CHAR:
-                    pass
-                # TODO
+                    enterpos = [int, int]
+                    newroom = [int, int]
+                    match player_input:
+                        case 'up':
+                            enterpos = [player.room_x, mg.PIXELS_TILE * ENTRANCE_BUFFER]
+                            newroom = [player.map_x, player.map_y - 1]
+
+                        case 'down':
+                            enterpos = [player.room_x, (mg.MAP_VERTICAL - ENTRANCE_BUFFER) * mg.PIXELS_TILE]
+                            newroom = [player.map_x, player.map_y + 1]
+
+                        case 'left':
+                            enterpos = [mg.PIXELS_TILE * ENTRANCE_BUFFER, player.room_y]
+                            newroom = [player.map_x + 1, player.map_y]
+
+                        case 'right:':
+                            enterpos = [(mg.MAP_HORIZONTAL - ENTRANCE_BUFFER) * mg.PIXELS_TILE, player.room_y]
+                            newroom = [player.map_x - 1, player.map_y]
+
+                    self.player_locations[channel_name].room_x = enterpos[0]
+                    self.player_locations[channel_name].room_y = enterpos[1]
+                    self.player_locations[channel_name].map_x = newpos[0]
+                    self.player_locations[channel_name].map_y = newroom[1]
 
                 case _:
                     pass
@@ -177,6 +198,10 @@ class GameWrapper:
 
         player = Player(map_x=0, map_y=0, room_x=spawnlocx, room_y=spanwlocy)
         self.player_locations[playerid] = player
+
+
+GameWrappers_Global_Dict = dict[str, GameWrapper]
+# This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
 
 
 def initialize_game(game_id):
@@ -223,4 +248,4 @@ def initialize_game(game_id):
             game_wrapper.enemy_locations[str(enemy_id)] = \
                 Enemy(map_x=roomx, map_y=roomy, room_x=spawnlocx, room_y=spawnlocy)
 
-    return game_map, game_wrapper
+    GameWrapper[str(game_id)] = game_wrapper
