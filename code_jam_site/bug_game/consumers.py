@@ -6,7 +6,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['game_id']
-        self.room_group_name = 'ingame_%s' % self.room_name
+        self.room_group_name = str.format('ingame_{}', self.room_name)
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -24,6 +24,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         pass
 
     async def receive_json(self, content, **kwargs):
+        print("received json")
+
         # content is a dict representing player input
 
         await GameWrappers_Global_Dict[self.room_name].player_input_handler(
@@ -34,7 +36,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         pass
 
-    async def ingame_message(self, event):
+    async def message(self, event):
+        print("sending json")
+
         # send event to self after parsing
 
         to_send = {}

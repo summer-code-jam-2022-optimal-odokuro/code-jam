@@ -68,6 +68,8 @@ function drawTriangle(x, y, context) {
 }
 
 webSocket.onmessage = function(e) {
+    console.log("recieved message")
+
     const data = JSON.parse(e.data);
     //unpacking code: tbd
     let temp_room = data['room']
