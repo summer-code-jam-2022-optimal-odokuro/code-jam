@@ -102,7 +102,7 @@ class GameWrapper:
 
         channel_layer = get_channel_layer()
         await channel_layer.group_send(
-            str.format('ingame_{}', self.room_name),
+            str.format('ingame_{}', self.game_id),
             {
                 "type": "message",
                 "game_wrapper": self,
