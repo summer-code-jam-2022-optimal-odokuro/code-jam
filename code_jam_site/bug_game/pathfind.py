@@ -28,6 +28,7 @@ async def pathfind(maze: list, start: tuple[int, int], end: tuple[int, int]) -> 
     :param end:
     :return: List of points to move to
     """
+    print("pathfind() called")
 
     # Setup
     start_node = Node(None, start)

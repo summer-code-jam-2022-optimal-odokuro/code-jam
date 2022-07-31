@@ -1,3 +1,4 @@
+import asyncio
 import json
 from dataclasses import dataclass
 
@@ -48,7 +49,7 @@ class GameWrapper:
     enemy_locations: dict[str, Enemy]
 
     async def room_players(self, map_x: int, map_y: int):
-        items = dict[str, Player]
+        items: dict[str, Player] = {}
 
         for k, v in self.player_locations.items():
             if v.map_x is map_x and v.map_y is map_y:
@@ -57,7 +58,7 @@ class GameWrapper:
         return items
 
     async def room_enemies(self, map_x: int, map_y: int):
-        items = dict[str, Enemy]
+        items: dict[str, Enemy] = {}
 
         for k, v in self.enemy_locations.items():
             if v.map_x is map_x and v.map_y is map_y:
@@ -67,7 +68,8 @@ class GameWrapper:
 
     async def loaded_rooms(self):
 
-        rooms = list[int, int]
+        # TODO: the default val might be a bug
+        rooms: list[int, int] = []
         for k, v in self.player_locations.items():
             room = [v.map_x, v.map_y]
             if room not in rooms:
@@ -76,7 +78,7 @@ class GameWrapper:
         return rooms
 
     async def loaded_enemies(self):
-        items = dict[str, Enemy]
+        items: dict[str, Enemy] = {}
         rooms = await self.loaded_rooms()
 
         for k, v in self.enemy_locations.items():
@@ -89,13 +91,15 @@ class GameWrapper:
         dist = [mg.ROOM_VERTICAL * mg.ROOM_HORIZONTAL, str]
 
         for k, v in (await self.room_players(map_x, map_y)).items():
-            temp_dist = abs(tile_x - v.tile_x) + abs(tile_y - v.tile_y)
+            temp_dist = abs(tile_x - v.tile_x()) + abs(tile_y - v.tile_y())
             if temp_dist < dist[0]:
                 dist = [temp_dist, k]
 
         return dist[1]
 
     async def update_clients(self):
+        print("clients updated")
+
         channel_layer = get_channel_layer()
         await channel_layer.group_send(
             self.game_id,
@@ -106,17 +110,21 @@ class GameWrapper:
         )
 
     async def enemy_actions(self, enemy_id: str):
+        return
+
         ref_enemy = self.enemy_locations[enemy_id]
 
-        if ref_enemy.path is not None and ref_enemy.path is not []:
-            pass
-
-        else:
+        while (ref_enemy.path is None) or (not ref_enemy.path):
             target = self.player_locations[await self.nearest_player(
                 ref_enemy.map_x, ref_enemy.map_y, ref_enemy.tile_x(), ref_enemy.tile_y())]
-            ref_enemy.path = await pathfind(maze=self.game_map[ref_enemy.map_x][ref_enemy.map_y],
-                                            start=(ref_enemy.tile_x(), ref_enemy.tile_y()),
-                                            end=(target.tile_x(), target.tile_y()))
+
+            path = await pathfind(maze=self.game_map[ref_enemy.map_x][ref_enemy.map_y],
+                                  start=(ref_enemy.tile_x(), ref_enemy.tile_y()),
+                                  end=(target.tile_x(), target.tile_y()))
+            if path is None:
+                return
+
+            ref_enemy.path = path
 
         ref_enemy.room_x = ref_enemy.path[1][0] * mg.PIXELS_TILE
         ref_enemy.room_y = ref_enemy.path[1][1] * mg.PIXELS_TILE
@@ -212,78 +220,83 @@ class GameWrapper:
 
 
 GameWrappers_Global_Dict: dict[str, GameWrapper] = {}
+
+
 # This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
 
 
 async def game_thread(game_id):
+    print("thread started")
 
     # This function will runforever in a thread
     while GameWrappers_Global_Dict[game_id].has_players:
-
         # All the game events that run some amount of time?
         # TODO implement gameticks
         # (idk how much they are supposed to run lol)
         await GameWrappers_Global_Dict[game_id].call_loaded_actions()
         await GameWrappers_Global_Dict[game_id].update_clients()
+        await asyncio.sleep(1)
 
     # When the game no longer has any players, we can remove it from the dict
     GameWrappers_Global_Dict.pop(game_id)
+    map_object = MapModel.objects.get(game_id=game_id)
+    map_object.game_exists = False
+    map_object.save()
 
 
 def initialize_game(game_id):
-    game_exists = False
-    game_wrapper = None
-
     if MapModel.objects.filter(game_id=game_id, game_exists=True).exists():
-        game_map = json.loads(MapModel.objects.filter(game_id=game_id)[0].map)
-        game_exists = True
+        return
 
         # If the game already exists
 
     elif MapModel.objects.filter(game_id=game_id).exists:
         map_object = MapModel.objects.filter(game_id=game_id)[0]
         map_object.exists = True
+        map_object.save()
         game_map = json.loads(map_object.map)
 
         # If the game does not yet exist but has existed before
 
     else:
         game_map = generate_map()
-        MapModel.objects.create(map=json.dumps(game_map), game_id=game_id, game_exists=True)
+        map_object = MapModel(map=json.dumps(game_map), game_id=game_id, game_exists=True)
+        map_object.save()
 
         # The game does not yet exist
+
     if not game_map:
         game_map = generate_map()
 
-    if not game_exists:
+    game_wrapper = GameWrapper(
+        game_id=str(game_id),
+        game_map=game_map,
+        player_locations={},
+        enemy_locations={},
+        has_players=True
+    )
 
-        game_wrapper = GameWrapper(
-            game_id=str(game_id),
-            game_map=game_map,
-            player_locations={},
-            enemy_locations={},
-            has_players=True
-            )
+    enemy_count = 200
 
-        enemy_count = 200
+    for enemy_id in range(1, enemy_count):
+        roomx = 0
+        roomy = 0
+        spawnlocx = 0
+        spawnlocy = 0
+        while game_wrapper.game_map[roomx][roomy][spawnlocx // mg.PIXELS_TILE][spawnlocy // mg.PIXELS_TILE] \
+                != mg.ROCK_CHAR:
+            spawnlocx = random.randint(mg.PIXELS_TILE, (mg.ROOM_HORIZONTAL - 1) * mg.PIXELS_TILE)
+            spawnlocy = random.randint(mg.PIXELS_TILE, (mg.ROOM_VERTICAL - 1) * mg.PIXELS_TILE)
+            roomx = random.randint(0, mg.MAP_HORIZONTAL - 1)
+            roomy = random.randint(0, mg.MAP_VERTICAL - 1)
 
-        for enemy_id in range(1, enemy_count):
-            roomx = 0
-            roomy = 0
-            spawnlocx = 0
-            spawnlocy = 0
-            while game_wrapper.game_map[roomx][roomy][spawnlocx // mg.PIXELS_TILE][spawnlocy // mg.PIXELS_TILE] \
-                    != mg.ROCK_CHAR:
-                spawnlocx = random.randint(mg.PIXELS_TILE, (mg.ROOM_HORIZONTAL - 1) * mg.PIXELS_TILE)
-                spawnlocy = random.randint(mg.PIXELS_TILE, (mg.ROOM_VERTICAL - 1) * mg.PIXELS_TILE)
-                roomx = random.randint(0, mg.MAP_HORIZONTAL - 1)
-                roomy = random.randint(0, mg.MAP_VERTICAL - 1)
-
-            game_wrapper.enemy_locations[str(enemy_id)] = \
-                Enemy(map_x=roomx, map_y=roomy, room_x=spawnlocx, room_y=spawnlocy)
+        game_wrapper.enemy_locations[str(enemy_id)] = \
+            Enemy(map_x=roomx, map_y=roomy, room_x=spawnlocx, room_y=spawnlocy)
 
     GameWrappers_Global_Dict[str(game_id)] = game_wrapper
 
     # Starts the game process to run in the background while players are connected
-    thread = threading.Thread(target=game_thread, args=str(game_id,), daemon=True)
+    thread = threading.Thread(target=asyncio.run, args=(game_thread(str(game_id)),), daemon=True)
+    thread.start()
 
+    print("game initialized")

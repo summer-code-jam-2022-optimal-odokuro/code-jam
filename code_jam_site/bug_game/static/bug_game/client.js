@@ -29,6 +29,8 @@ function getRoom() {
 room = getRoom()
 
 function getRoomBuffer(room, players, enemies) {
+    console.log("getting room buffer")
+
     const buffer = document.createElement('canvas');
     buffer.width = room.length * GRID;
     buffer.height = room[0].length * GRID;
