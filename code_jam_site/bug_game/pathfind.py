@@ -1,4 +1,6 @@
 from mapgen import generate_map
+import mapgen as mg
+
 
 class Node:
     """Node used for pathfinding"""
@@ -18,7 +20,7 @@ class Node:
         return str(self.pos)
 
 
-def pathfind(maze: list, start: tuple[int, int], end: tuple[int, int]) -> list[list[int, int]]:
+async def pathfind(maze: list, start: tuple[int, int], end: tuple[int, int]) -> list[list[int, int]]:
     """
     Find a path to a location.
     :param maze: The maze
@@ -74,7 +76,7 @@ def pathfind(maze: list, start: tuple[int, int], end: tuple[int, int]) -> list[l
                 continue
 
             # Make sure we can walk on terrain
-            if maze[node_pos[0]][node_pos[1]] != 0:
+            if maze[node_pos[0]][node_pos[1]] != mg.NONE_CHAR:
                 continue
 
             new_node = Node(cur_node, node_pos)

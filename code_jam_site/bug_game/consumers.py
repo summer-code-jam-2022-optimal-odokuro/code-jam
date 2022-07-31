@@ -25,12 +25,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, content, **kwargs):
         # content is a dict representing player input
+        # TODO: get the game wrapper
 
-        # call player with input
+        await new_player(self.room_name, )
 
         pass
 
     async def ingame_message(self, event):
         # send event to self after parsing
+        # TODO: modify event before sending
 
-        pass
+        await self.send_json(event)
