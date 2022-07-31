@@ -1,6 +1,8 @@
 from code_jam_site.bug_game.mapgen import generate_map
 import random
 
+from code_jam_site.bug_game.pathfind import pathfind
+
 def initialize_game(player_ids):
     MAP_HORIZONTAL = 5
     MAP_VERTICAL = 5
@@ -71,6 +73,22 @@ def player_input_handler(id, input, playerlocs,enemylocs map):
             newplayerloc=((((map[(playerloc[0]+1)])[(playerloc[1]-1)])[(playerloc[2]-1248)])[(playerloc[3])]) 
     elif input=='attack':
         for key in enemylocs.keys():
-            if (enemylocs[key])[0]==playerloc[0] and (enemylocs[key])[1]==playerloc[1] and (enemylocs[key])[2] in range((playerloc[2]-20, (playerloc[2]+20))) and (enemylocs[key])[2] in range((playerloc[3]-20, (playerloc[3]+20))):
+            if (enemylocs[key])[0]==playerloc[0] and (enemylocs[key])[1]==playerloc[1] and (enemylocs[key])[2] in range((playerloc[2]-20, (playerloc[2]+20))) and (enemylocs[key])[2] in range((playerloc[3]-24, (playerloc[3]+24))):
                 enemylocs=enemylocs.pop(key)
+    for rekey in enemylocs.keys():
+        if (enemylocs[key])[0]==playerloc[0] and (enemylocs[key])[1]==playerloc[1] and (enemylocs[key])[2] in range((playerloc[2]-20, (playerloc[2]+20))) and (enemylocs[key])[2] in range((playerloc[3]-8, (playerloc[3]+8))):
+            return ([id,'death'])
+
+def enemy_actions(playerlocs, enemylocs, enemy, map):
+    for player in playerlocs.keys():
+        if (playerlocs[player])[0]==(enemylocs[enemy])[0] and (playerlocs[player])[1]==(enemylocs[enemy])[1]:
+            room=(map[(enemylocs[enemy])[0]])[(enemylocs[enemy])[1]]
+            enemypos=((enemylocs[enemy])[2], (enemylocs[enemy])[3])
+            playerpos=((playerlocs[player])[2], (playerlocs[player])[3])
+            path=pathfind(room, enemypos, playerpos)
+            newenemypos=path[1]
+            (enemylocs[enemy])[2]=newenemypos[0]
+            (enemylocs[enemy])[3]=newenemypos[1]
+
+            
 
