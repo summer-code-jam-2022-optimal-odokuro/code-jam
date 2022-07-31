@@ -101,9 +101,7 @@ class GameWrapper:
             self.game_id,
             {
                 "type": "ingame.message",
-                "map": self.game_map,
-                "players": self.player_locations,
-                "enemies": self.enemy_locations
+                "game_wrapper": self,
             },
         )
 
@@ -213,7 +211,7 @@ class GameWrapper:
             await self.enemy_actions(k)
 
 
-GameWrappers_Global_Dict = dict[str, GameWrapper]
+GameWrappers_Global_Dict: dict[str, GameWrapper] = {}
 # This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
 
 
@@ -250,10 +248,12 @@ def initialize_game(game_id):
         # If the game does not yet exist but has existed before
 
     else:
-        game_map = generate_map(game_id)
+        game_map = generate_map()
         MapModel.objects.create(map=json.dumps(game_map), game_id=game_id, game_exists=True)
 
         # The game does not yet exist
+    if not game_map:
+        game_map = generate_map()
 
     if not game_exists:
 
@@ -276,8 +276,8 @@ def initialize_game(game_id):
                     != mg.ROCK_CHAR:
                 spawnlocx = random.randint(mg.PIXELS_TILE, (mg.ROOM_HORIZONTAL - 1) * mg.PIXELS_TILE)
                 spawnlocy = random.randint(mg.PIXELS_TILE, (mg.ROOM_VERTICAL - 1) * mg.PIXELS_TILE)
-                roomx = random.randint(0, mg.MAP_HORIZONTAL)
-                roomy = random.randint(0, mg.MAP_VERTICAL)
+                roomx = random.randint(0, mg.MAP_HORIZONTAL - 1)
+                roomy = random.randint(0, mg.MAP_VERTICAL - 1)
 
             game_wrapper.enemy_locations[str(enemy_id)] = \
                 Enemy(map_x=roomx, map_y=roomy, room_x=spawnlocx, room_y=spawnlocy)
