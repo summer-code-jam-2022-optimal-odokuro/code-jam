@@ -42,21 +42,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         # send event to self after parsing
 
         to_send = {}
-        game_wrapper: GameWrapper = event["game_wrapper"]
-        player: Player = game_wrapper.player_locations[self.channel_name]
-        players = await game_wrapper.room_players(player.map_x, player.map_y)
-        enemies = await game_wrapper.room_enemies(player.map_x, player.map_y)
+        serial: dict[str, {list[list[list[list[int]]]] | dict[str, {str: int | str}]}] = event["game_wrapper"]
+
+        player: dict[str, {str: int | str}] = serial['players'][self.channel_name]
+        room = [player['map_x'], player['map_y']]
+
         send_players = {}
         send_enemies = {}
 
-        for k, v in players:
-            send_players[k] = [v.room_x, v.room_y]
+        for k, v in serial['players'].items():
+            if room == [v['map_x'], v['map_y']]:
+                send_players[k] = v
+
             # only send the room specific positional coordinates over
 
-        for k, v in enemies:
-            send_enemies[k] = [v.room_x, v.room_y]
+        for k, v in serial['enemies'].items():
+            if room == [v['map_x'], v['map_y']]:
+                send_enemies[k] = v
 
-        to_send['room'] = game_wrapper.game_map[player.map_x][player.map_y]
+        to_send['room']: list[list[list[list[int]]]] = serial['map']
         to_send['players'] = send_players
         to_send['enemies'] = send_enemies
 

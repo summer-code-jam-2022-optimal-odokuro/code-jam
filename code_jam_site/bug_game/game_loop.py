@@ -42,6 +42,7 @@ class Enemy(GameEntity):
 
 @dataclass(init=True)
 class GameWrapper:
+
     has_players: bool
     game_id: str
     game_map: list[list[list[list[int]]]]
@@ -101,11 +102,36 @@ class GameWrapper:
         print("clients updated")
 
         channel_layer = get_channel_layer()
+        serial: dict[str, {list[list[list[list[int]]]] | dict[str, {str: int | str}]}] = {
+            'map': self.game_map,
+            'players': {},
+            'enemies': {},
+        }
+
+        for k, v in self.player_locations.items():
+            serial['players'][k] = {
+                'map_x': v.map_x,
+                'map_y': v.map_y,
+                'room_x': v.room_x,
+                'room_y': v.room_y,
+                'texture_type': v.texture_type,
+                'kills': v.kills,
+            }
+
+        for k, v in self.enemy_locations.items():
+            serial['enemies'][k] = {
+                'map_x': v.map_x,
+                'map_y': v.map_y,
+                'room_x': v.room_x,
+                'room_y': v.room_y,
+                'texture_type': v.texture_type,
+            }
+
         await channel_layer.group_send(
             str.format('ingame_{}', self.game_id),
             {
                 "type": "message",
-                "game_wrapper": self,
+                "game_wrapper": serial,
             },
         )
 
