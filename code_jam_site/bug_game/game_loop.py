@@ -82,3 +82,12 @@ def enemy_actions(playerlocs, enemylocs, enemy, map):
             newenemypos=path[1]
             (enemylocs[enemy])[2]=newenemypos[0]
             (enemylocs[enemy])[3]=newenemypos[1]
+
+def new_player(playerid, playerlocs, game_map):
+    spawnlocx = random.randint(16, 1248)
+    spanwlocy = random.randint(16, 1248)
+    while ((((game_map[0])[0])[spawnlocx // 16])[spanwlocy // 16]) != 0:
+        spawnlocx = random.randint(16, 1248)
+        spanwlocy = random.randint(16, 1248)
+    location = [0, 0, spawnlocx, spanwlocy]
+    playerlocs[playerid] = location   
