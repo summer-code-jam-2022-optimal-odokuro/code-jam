@@ -25,7 +25,7 @@ def ingame(request, game_id=None):
         game_map = generate_map(game_id)
         MapModel.objects.create(map=json.dumps(game_map), game_id=game_id)
 
-    return render(request, 'bug_game/ingame.html', {'game_map': game_map})
+    return render(request, 'bug_game/ingame.html', {'game_map': game_map, 'game_id': game_id})
 
 
 def lobby(request):
