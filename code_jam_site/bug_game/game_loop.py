@@ -71,3 +71,14 @@ def player_input_handler(player_id, player_input, playerlocs, enemylocs, map):
                 2] in range((playerloc[2] - 20, (playerloc[2] + 20))) and (enemylocs[key])[2] in range(
                     (playerloc[3] - 20, (playerloc[3] + 20))):
                 enemylocs = enemylocs.pop(key)
+
+def enemy_actions(playerlocs, enemylocs, enemy, map):
+    for player in playerlocs.keys():
+        if (playerlocs[player])[0]==(enemylocs[enemy])[0] and (playerlocs[player])[1]==(enemylocs[enemy])[1]:
+            room=(map[(enemylocs[enemy])[0]])[(enemylocs[enemy])[1]]
+            enemypos=((enemylocs[enemy])[2], (enemylocs[enemy])[3])
+            playerpos=((playerlocs[player])[2], (playerlocs[player])[3])
+            path=pathfind(room, enemypos, playerpos)
+            newenemypos=path[1]
+            (enemylocs[enemy])[2]=newenemypos[0]
+            (enemylocs[enemy])[3]=newenemypos[1]
