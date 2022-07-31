@@ -1,6 +1,6 @@
 import json
 
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import WebsocketConsumer, AsyncJsonWebsocketConsumer
 
 
 class ClientConsumer(WebsocketConsumer):
@@ -21,3 +21,21 @@ class ClientConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': message
         }))
+
+
+class GameConsumer(AsyncJsonWebsocketConsumer):
+
+    async def connect(self):
+
+        await self.accept()
+
+    async def disconnect(self, code):
+
+        pass
+
+    async def receive_json(self, content, **kwargs):
+
+        # content is a tuple? of decoded json object item
+
+        await self.send_json(content={'message': 'among'})
+
