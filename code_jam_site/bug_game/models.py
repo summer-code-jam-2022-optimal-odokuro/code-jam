@@ -6,3 +6,4 @@ from django.db import models
 class MapModel(models.Model):
     map = models.JSONField()
     game_id = models.IntegerField()
+    game_exists = models.BooleanField(default=False)
