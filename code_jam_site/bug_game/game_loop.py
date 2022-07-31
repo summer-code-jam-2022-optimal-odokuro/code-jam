@@ -10,6 +10,8 @@ from .models import MapModel
 
 from .pathfind import pathfind
 
+import threading
+
 PLAYER_RANGE = 2
 ENTRANCE_BUFFER = 2
 
@@ -39,6 +41,7 @@ class Enemy(GameEntity):
 
 @dataclass(init=True)
 class GameWrapper:
+    has_players: bool
     game_id: str
     game_map: list[list[list[list[int]]]]
     player_locations: dict[str, Player]
@@ -198,13 +201,35 @@ class GameWrapper:
 
         player = Player(map_x=0, map_y=0, room_x=spawnlocx, room_y=spanwlocy)
         self.player_locations[playerid] = player
+        self.has_players = True
 
     async def del_player(self, playerid: str):
         self.player_locations.pop(playerid)
+        if len(self.player_locations) == 0:
+            self.has_players = False
+
+    async def call_loaded_actions(self):
+        for k, v in (await self.loaded_enemies()).items():
+            await self.enemy_actions(k)
 
 
 GameWrappers_Global_Dict = dict[str, GameWrapper]
 # This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
+
+
+async def game_thread(game_id):
+
+    # This function will runforever in a thread
+    while GameWrappers_Global_Dict[game_id].has_players:
+
+        # All the game events that run some amount of time?
+        # TODO implement gameticks
+        # (idk how much they are supposed to run lol)
+        await GameWrappers_Global_Dict[game_id].call_loaded_actions()
+        await GameWrappers_Global_Dict[game_id].update_clients()
+
+    # When the game no longer has any players, we can remove it from the dict
+    GameWrappers_Global_Dict.pop(game_id)
 
 
 def initialize_game(game_id):
@@ -232,7 +257,13 @@ def initialize_game(game_id):
 
     if not game_exists:
 
-        game_wrapper = GameWrapper(game_id=game_id, game_map=game_map, player_locations={}, enemy_locations={})
+        game_wrapper = GameWrapper(
+            game_id=str(game_id),
+            game_map=game_map,
+            player_locations={},
+            enemy_locations={},
+            has_players=True
+            )
 
         enemy_count = 200
 
@@ -251,4 +282,8 @@ def initialize_game(game_id):
             game_wrapper.enemy_locations[str(enemy_id)] = \
                 Enemy(map_x=roomx, map_y=roomy, room_x=spawnlocx, room_y=spawnlocy)
 
-    GameWrapper[str(game_id)] = game_wrapper
+    GameWrappers_Global_Dict[str(game_id)] = game_wrapper
+
+    # Starts the game process to run in the background while players are connected
+    thread = threading.Thread(target=game_thread, args=str(game_id,), daemon=True)
+

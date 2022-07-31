@@ -1,5 +1,5 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from game_loop import GameWrapper, Player, GameWrappers_Global_Dict
+from .game_loop import GameWrapper, Player, GameWrappers_Global_Dict
 
 
 class GameConsumer(AsyncJsonWebsocketConsumer):

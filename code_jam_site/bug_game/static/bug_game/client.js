@@ -1,7 +1,10 @@
 let game = null;
 let player = null;
 
-const GRID = 10;
+const keymap = new Map([[87, "up"], [53, "down"], [41, "left"], [44, "right"], [32, "attack"]]);
+
+
+const GRID = 16;
 // This is the "pixel size" of each tile
 
 const map = document.getElementById("map");
@@ -19,24 +22,13 @@ const webSocket = new WebSocket(
     + '/'
 );
 
-webSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-
-    //unpacking code: tbd
-
-}
-
-webSocket.onclose = function(e) {
-    console.error("bruh");
-}
-
 function getRoom() {
     return exampleMap
 }
 
 room = getRoom()
 
-function getRoomBuffer(room) {
+function getRoomBuffer(room, players, enemies) {
     const buffer = document.createElement('canvas');
     buffer.width = room.length * GRID;
     buffer.height = room[0].length * GRID;
@@ -73,7 +65,43 @@ function drawTriangle(x, y, context) {
     context.fill();
 }
 
-let roomBuffer, roomBufferContext;
-[roomBuffer, roomBufferContext] = getRoomBuffer(room)
+webSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    //unpacking code: tbd
+    let temp_room = data['room']
+    let temp_players = data['players']
+    let temp_enemies = data['enemies']
 
-mapContext.drawImage(roomBuffer, 0, 0)
+    let roomBuffer, roomBufferContext;
+    [roomBuffer, roomBufferContext] = getRoomBuffer(temp_room, temp_players, temp_enemies)
+    mapContext.drawImage(roomBuffer, 0, 0)
+}
+
+webSocket.onclose = function(e) {
+    console.error("bruh");
+}
+
+window.addEventListener("keydown", function(event){
+    if (event.defaultPrevented){
+        return;
+    }
+
+    let handled = false;
+    let input = 'None';
+
+    // Apparently this is deprecated
+    // Oh well
+    if (event.keyCode !== undefined){
+        handled = true;
+        if (keymap.has(event.keyCode)){
+            input = keymap.get(event.keyCode)
+        }
+    }
+
+    if (handled) {
+        let msg = {'input': input}
+
+        webSocket.send(JSON.stringify(msg))
+        event.preventDefault()
+    }
+}, true)

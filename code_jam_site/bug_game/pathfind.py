@@ -1,5 +1,5 @@
-from mapgen import generate_map
-import mapgen as mg
+from .mapgen import generate_map
+from . import mapgen as mg
 
 
 class Node:
