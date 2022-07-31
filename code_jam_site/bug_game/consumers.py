@@ -19,6 +19,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
+        await GameWrappers_Global_Dict[self.room_name].del_player(self.room_name)
+
         pass
 
     async def receive_json(self, content, **kwargs):

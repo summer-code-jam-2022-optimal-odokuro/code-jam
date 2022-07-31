@@ -199,6 +199,9 @@ class GameWrapper:
         player = Player(map_x=0, map_y=0, room_x=spawnlocx, room_y=spanwlocy)
         self.player_locations[playerid] = player
 
+    async def del_player(self, playerid: str):
+        self.player_locations.pop(playerid)
+
 
 GameWrappers_Global_Dict = dict[str, GameWrapper]
 # This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
