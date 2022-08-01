@@ -69,8 +69,7 @@ class GameWrapper:
 
     async def loaded_rooms(self):
 
-        # TODO: the default val might be a bug
-        rooms: list[int, int] = []
+        rooms: list[list[int]] = []
         for k, v in self.player_locations.items():
             room = [v.map_x, v.map_y]
             if room not in rooms:
@@ -99,7 +98,6 @@ class GameWrapper:
         return dist[1]
 
     async def update_clients(self):
-        print("clients updated")
 
         channel_layer = get_channel_layer()
         serial: dict[str, {list[list[list[list[int]]]] | dict[str, {str: int | str}]}] = {
@@ -137,6 +135,7 @@ class GameWrapper:
 
     async def enemy_actions(self, enemy_id: str):
         return
+        # TODO FIX (type errors, out of bounds errors, ect)
 
         ref_enemy = self.enemy_locations[enemy_id]
 
@@ -225,6 +224,7 @@ class GameWrapper:
                     # Nothing else can be moved into so there is no change in position
 
     async def new_player(self, playerid: str):
+        # TODO FIX (main thing is use of magic numbers)
         spawnlocx = random.randint(mg.PIXELS_TILE, (mg.ROOM_HORIZONTAL - 1) * mg.PIXELS_TILE)
         spanwlocy = random.randint(mg.PIXELS_TILE, (mg.ROOM_VERTICAL - 1) * mg.PIXELS_TILE)
         while ((((self.game_map[0])[0])[spawnlocx // 16])[spanwlocy // 16]) != mg.NONE_CHAR:
@@ -246,13 +246,11 @@ class GameWrapper:
 
 
 GameWrappers_Global_Dict: dict[str, GameWrapper] = {}
-
-
+# TODO FIX (implement caching)
 # This code is only here due to a lack of foresight and time. I will commit seppuku for my actions
 
 
 async def game_thread(game_id):
-    print("thread started")
 
     # This function will runforever in a thread
     while GameWrappers_Global_Dict[game_id].has_players:
@@ -271,32 +269,19 @@ async def game_thread(game_id):
 
 
 def initialize_game(game_id):
-    if MapModel.objects.filter(game_id=game_id, game_exists=True).exists():
+
+    if game_id in GameWrappers_Global_Dict:
         return
+        # If the game already exists (already in mem)
 
-        # If the game already exists
-
-    elif MapModel.objects.filter(game_id=game_id).exists():
-        map_object = MapModel.objects.get(game_id=game_id)
-        map_object.exists = True
-        map_object.save()
-        game_map = json.loads(map_object.map)
-
-        # If the game does not yet exist but has existed before
-
-    else:
-        game_map = generate_map()
-        map_object = MapModel(map=json.dumps(game_map), game_id=game_id, game_exists=True)
-        map_object.save()
-
-        # The game does not yet exist
-
-    if not game_map:
-        game_map = generate_map()
+    map_obj = MapModel.objects.get_or_create(
+        game_id=game_id,
+        defaults={'map': generate_map()}
+    )[0]
 
     game_wrapper = GameWrapper(
         game_id=str(game_id),
-        game_map=game_map,
+        game_map=map_obj.map,
         player_locations={},
         enemy_locations={},
         has_players=True
@@ -325,4 +310,4 @@ def initialize_game(game_id):
     thread = threading.Thread(target=asyncio.run, args=(game_thread(str(game_id)),), daemon=True)
     thread.start()
 
-    print("game initialized")
+

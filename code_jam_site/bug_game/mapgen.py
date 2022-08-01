@@ -108,7 +108,7 @@ def generate_room_rocks(room: list[list[int]]) -> list[list[int]]:
     :param room: The room to generate rocks in
     :return: Room with rocks in it
     """
-    # Todo: As much as possible cut down on the amount of magic numbers and instead use constants, parameters, etc.
+    # TODO: As much as possible cut down on the amount of magic numbers and instead use constants, parameters, etc.
 
     for _ in range(random.randint(25, 30)):
         rocksize = random.randint(5, 7)
