@@ -66,18 +66,13 @@ webSocket.onmessage = function(e) {
     console.log("received message")
 
     const data = JSON.parse(e.data);
-    //unpacking code: tbd
+
     let temp_room = data['room']
     let temp_players = data['players']
     let temp_enemies = data['enemies']
 
     // If i ever get around to it i will make a window displaying which room you are in in terms of the map
     let room_index = data['room_index']
-
-    const x = { x: 5, y: 6}
-
-    //console.log(JSON.stringify(temp_players))
-    //console.log(JSON.stringify(temp_enemies))
 
     const map = document.getElementById("map");
     map.width = temp_room.length * GRID;
@@ -101,12 +96,15 @@ webSocket.onmessage = function(e) {
          if (!temp_enemies.hasOwnProperty(key)){
              continue
          }
-         const value = temp_players[key]
+         const value = temp_enemies[key]
          entities.push(new entity_display(value['room_x'], value['room_y'], value['texture_type'], 1))
      }
 
      for (const entity of entities){
          // TODO draw entity here, haven't decided exactly how we're gonna do that
+         if (!entity.type_id){
+             console.log(entity)
+         }
      }
 }
 
