@@ -22,6 +22,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
+        #TODO: this call gives a keyError sometimes, fix
         await GameWrappers_Global_Dict[self.room_name].del_player(self.channel_name)
 
     async def receive_json(self, content, **kwargs):
@@ -58,5 +59,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         to_send['players'] = send_players
         to_send['enemies'] = send_enemies
         to_send['room_index'] = room
+        to_send['player_key'] = self.channel_name
 
         await self.send_json(to_send)

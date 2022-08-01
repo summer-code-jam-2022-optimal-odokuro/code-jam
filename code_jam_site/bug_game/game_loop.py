@@ -236,6 +236,13 @@ class GameWrapper:
         self.has_players = True
 
     async def del_player(self, playerid: str):
+
+        # TODO FIX
+        if playerid not in self.player_locations:
+            print("ERROR: DISCONNECT CALLED FROM INCORRECT CONSUMER.  \n"
+                  "PLAYER INSTANCE MAY HAVE NOT BEEN PROPERLY REMOVED")
+            return
+
         self.player_locations.pop(playerid)
         if len(self.player_locations) == 0:
             self.has_players = False
