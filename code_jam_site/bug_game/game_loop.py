@@ -263,9 +263,6 @@ async def game_thread(game_id):
 
     # When the game no longer has any players, we can remove it from the dict
     GameWrappers_Global_Dict.pop(game_id)
-    map_object = MapModel.objects.get(game_id=game_id)
-    map_object.game_exists = False
-    map_object.save()
 
 
 def initialize_game(game_id):

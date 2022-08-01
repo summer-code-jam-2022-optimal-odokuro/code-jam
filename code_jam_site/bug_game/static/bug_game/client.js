@@ -3,6 +3,7 @@ let player = null;
 
 const keymap = new Map([[87, "up"], [53, "down"], [41, "left"], [44, "right"], [32, "attack"]])
 const colormap = new Map([[0, "white"], [1, "darkslategray"], [2, "black"], [3, "lightgray"]])
+const texturemap = new Map([[], []])
 
 /*server constants:
 DOOR_CHAR = 3
@@ -33,9 +34,13 @@ function getRoomBuffer(room, players, enemies, map) {
 
     for (let [ridx, row] of room.entries()) {
         for (let [cidx, col] of row.entries()) {
-            bufferContext.fillStyle = colormap[col]
+            bufferContext.fillStyle = colormap.get(col)
+
             bufferContext.fillRect(ridx * GRID, cidx * GRID, GRID, GRID)
         }
+    }
+    for (let [player_id, player_dict] of players){
+        console.log(player_dict)
     }
 
     return [buffer, bufferContext];
@@ -59,10 +64,6 @@ webSocket.onmessage = function(e) {
     let temp_room = data['room']
     let temp_players = data['players']
     let temp_enemies = data['enemies']
-
-    console.log('room: ' + temp_room)
-    console.log('players: ' +  temp_players)
-    console.log('enemies' + temp_enemies)
 
     const map = document.getElementById("map");
     map.width = temp_room.length * GRID;
