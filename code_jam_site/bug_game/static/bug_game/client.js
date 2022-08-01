@@ -22,12 +22,6 @@ const webSocket = new WebSocket(
     + '/'
 );
 
-function getRoom() {
-    return exampleMap
-}
-
-room = getRoom()
-
 function getRoomBuffer(room, players, enemies) {
     console.log("getting room buffer")
 
@@ -75,6 +69,10 @@ webSocket.onmessage = function(e) {
     let temp_room = data['room']
     let temp_players = data['players']
     let temp_enemies = data['enemies']
+
+    console.log('room: ' + temp_room)
+    console.log('players: ' +  temp_players)
+    console.log('enemies' + temp_enemies)
 
     let roomBuffer, roomBufferContext;
     [roomBuffer, roomBufferContext] = getRoomBuffer(temp_room, temp_players, temp_enemies)

@@ -128,7 +128,8 @@ def generate_room_rocks(room: list[list[int]]) -> list[list[int]]:
 
 
 def generate_map(map_width: int = MAP_HORIZONTAL, map_height: int = MAP_VERTICAL,
-                 room_width: int = ROOM_HORIZONTAL, room_height: int = ROOM_VERTICAL, generate_rocks: bool = True) \
+                 room_width: int = ROOM_HORIZONTAL, room_height: int = ROOM_VERTICAL,
+                 generate_rocks: bool = True, gen_testing: bool = False) \
         -> list[list[list[list[int]]]]:
     """
     Generate a rectangular map with the given number of rooms
@@ -138,6 +139,7 @@ def generate_map(map_width: int = MAP_HORIZONTAL, map_height: int = MAP_VERTICAL
     :param map_width: Width of the map
     :param map_height: Height of the map
     :param generate_rocks: Boolean determining whether rocks should be generated
+    :param gen_testing: Boolean determining whether a map should be printed to console when generated
     :return: 2d list of rooms, each room is a 2d list of characters
     """
     new_map = [[[[NONE_CHAR for _ in range(room_height)] for _ in range(room_width)] for _ in range(map_height)] for _
@@ -152,12 +154,15 @@ def generate_map(map_width: int = MAP_HORIZONTAL, map_height: int = MAP_VERTICAL
             if generate_rocks:
                 new_map[row][column] = generate_room_rocks(new_map[row][column])
 
+    if gen_testing:
+        for a in new_map:
+            for b in a:
+                for c in b:
+                    print(c)
+                print()
+
     return new_map
 
 
 if __name__ == '__main__':
-    for a in generate_map():
-        for b in a:
-            for c in b:
-                print(c)
-            print()
+    generate_map()
