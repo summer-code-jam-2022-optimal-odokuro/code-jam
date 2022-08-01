@@ -10,4 +10,5 @@ class BugGameConfig(AppConfig):
         for map_object in MapModel.objects.all():
             map_object.game_exists = False
             map_object.save()
+    #        print(map_object.map)
 

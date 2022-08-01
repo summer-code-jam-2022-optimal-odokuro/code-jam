@@ -60,8 +60,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             if room == [v['map_x'], v['map_y']]:
                 send_enemies[k] = v
 
-        to_send['room']: list[list[list[list[int]]]] = serial['map']
+        to_send['room']: list[list[list[list[int]]]] = serial['map'][room[0]][room[1]]
         to_send['players'] = send_players
         to_send['enemies'] = send_enemies
+        to_send['room_index'] = room
 
         await self.send_json(to_send)

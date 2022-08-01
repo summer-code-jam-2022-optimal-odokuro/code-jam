@@ -276,8 +276,8 @@ def initialize_game(game_id):
 
         # If the game already exists
 
-    elif MapModel.objects.filter(game_id=game_id).exists:
-        map_object = MapModel.objects.filter(game_id=game_id)[0]
+    elif MapModel.objects.filter(game_id=game_id).exists():
+        map_object = MapModel.objects.get(game_id=game_id)
         map_object.exists = True
         map_object.save()
         game_map = json.loads(map_object.map)
